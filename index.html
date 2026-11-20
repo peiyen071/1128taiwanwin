@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1128開票趴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --deep:#a63d0a; --deep2:#d9590f; --sea:#f07c1e; --cur:#ffd27a; --foam:#ffe6cc;
+    --bg:#fff6ee; --card:#fff; --ink:#2b1608; --muted:#8a6d58; --line:#f1e0d2;
+    --yes:#ea6a12; --yes-soft:#fde9d9;
+    --no:#9aa7b2;
+    --wait:#2f86b8; --wait-soft:#e3f1f8;
+    --short:#fff3a8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+  /* ===== Hero ===== */
+  .hero{position:relative;background:linear-gradient(170deg,var(--deep) 0%,var(--deep2) 55%,var(--sea) 100%);color:#fff;overflow:hidden;padding:24px 16px 86px}
+  .hero-in{position:relative;z-index:2;max-width:760px;margin:0 auto}
+  h1{font-size:30px;font-weight:900;margin:0 0 14px;letter-spacing:.03em}
+  h1 .num{color:var(--cur)}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:18px}
+  .stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:10px 12px}
+  .stat .l{font-size:12px;color:var(--foam)}
+  .stat .v{font-size:26px;font-weight:900;line-height:1.2}
+  .stat .v small{font-size:14px;font-weight:700;margin-left:2px}
+  .stat .s{font-size:11px;color:#ffe0c4;margin-top:2px}
+  .stat.short .v{color:var(--short)}
+  .stat.short.ok .v{color:#d8ffcf}
+
+  /* seat grid */
+  .seats-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;font-size:14px;color:var(--foam)}
+  .seats-h b{color:#fff;font-size:16px}
+  .seats{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+  .seat{position:relative;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+  .seat.on{background:#fff;color:#c2500d;box-shadow:0 2px 8px rgba(90,30,0,.25)}
+  .seat.kid{background:#ffe2c2;color:#8a3a07}
+  .seat.kid::after{content:"小";position:absolute;top:3px;right:4px;font-size:9px;background:#ea6a12;color:#fff;border-radius:6px;padding:0 3px;line-height:13px}
+  .seat.empty{border:1.5px dashed rgba(255,236,214,.5);color:rgba(255,236,214,.6);font-weight:400;font-size:12px}
+  .seat.extra{outline:2px solid #fff3a8}
+  .seat.on{animation:pop .35s ease-out both}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .seat-legend{display:flex;gap:14px;font-size:12px;color:var(--foam);margin-top:10px;flex-wrap:wrap}
+  .seat-legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-1px}
+  .target-edit input{width:46px;font:inherit;font-weight:700;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:7px;padding:1px 4px;text-align:center}
+
+  .currents{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.2}
+  .currents path{fill:none;stroke:#ffe1b8;stroke-width:1.4;stroke-dasharray:6 10;animation:flow 14s linear infinite}
+  .currents path:nth-child(2){animation-duration:19s;stroke-width:1}
+  .currents path:nth-child(3){animation-duration:24s}
+  @keyframes flow{to{stroke-dashoffset:-320}}
+  @keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .hero-wave{position:absolute;left:0;right:0;bottom:-1px;height:70px;z-index:1}
+  .hero-wave svg{position:absolute;bottom:0;width:200%;height:70px;animation:drift 18s linear infinite}
+  .hero-wave svg.b{animation-duration:26s;animation-direction:reverse;opacity:.5}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ===== Body ===== */
+  .wrap{max-width:760px;margin:4px auto 0;padding:0 16px 80px;position:relative;z-index:3}
+  .notice{background:var(--wait-soft);color:#8a4f0e;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none}
+  .sec{margin-top:26px}
+  .sec:first-of-type{margin-top:0}
+  .sec-h{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:18px;font-weight:900}
+  .sec-h .count{font-size:13px;font-weight:500;color:var(--muted)}
+  .sub-h{font-size:14px;font-weight:700;color:var(--muted);margin:14px 0 8px;display:flex;gap:8px;align-items:center}
+  .drop{width:14px;height:18px;flex:none}
+  .sec-empty{color:var(--muted);font-size:13px;background:var(--card);border-radius:12px;padding:12px 16px}
+
+  .list{display:flex;flex-direction:column;gap:8px}
+  .g{background:var(--card);border-radius:14px;padding:12px 14px;box-shadow:0 2px 10px rgba(120,50,10,.05);border-left:5px solid var(--wait)}
+  .g.notyet{border-left-color:#9cb9cc;border-left-style:dashed}
+  .g.yes{border-left-color:var(--yes)}
+  .g.no{border-left-color:var(--no);background:#f7f9fa}
+  .row1{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .g-name{font-weight:900;font-size:17px}
+  .g.no .g-name{color:var(--muted);text-decoration:line-through;text-decoration-color:#c3ccd4}
+  .fam{display:inline-block;font-size:11px;font-weight:700;background:var(--yes-soft);color:var(--yes);border-radius:999px;padding:1px 7px;vertical-align:2px}
+  .paid{display:inline-flex;align-items:center;gap:5px;vertical-align:3px;margin-left:6px;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:2px 9px 2px 5px;font:inherit;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+  .paid i{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border:1.5px solid #d9c3b1;border-radius:4px;font-style:normal;font-size:11px;background:#fff}
+  .paid.on{background:#e7f6ea;border-color:#8fcf9c;color:#2c7a3d}
+  .paid.on i{background:#2c9a4a;border-color:#2c9a4a;color:#fff}
+  .g-meta{font-size:12px;color:var(--muted);margin-top:2px}
+  .g-meta .chg{color:#c43c3c;font-weight:700}
+  .seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .seg button{border:none;background:#fff;font:inherit;font-size:14px;padding:9px 12px;cursor:pointer;color:var(--muted);white-space:nowrap}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on.s-yes{background:var(--yes);color:#fff;font-weight:700}
+  .seg button.on.s-no{background:var(--no);color:#fff;font-weight:700}
+  .seg button.on.s-wait{background:var(--wait-soft);color:var(--wait);font-weight:700}
+  .seg button:not(.on):hover{background:var(--bg)}
+  .row2{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:14px}
+  .stepper{display:inline-flex;align-items:center;gap:2px;background:var(--bg);border-radius:12px;padding:3px}
+  .stepper button{border:none;background:#fff;width:34px;height:34px;border-radius:9px;font-size:19px;cursor:pointer;color:var(--sea);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .stepper span{min-width:30px;text-align:center;font-weight:900;font-size:17px}
+  .fee{margin-left:auto;background:var(--yes-soft);color:var(--deep);border-radius:10px;padding:6px 12px;text-align:right;line-height:1.3}
+  .fee b{font-size:18px;font-weight:900}
+  .fee small{display:block;font-size:11px;color:var(--muted)}
+  .notify{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer;color:var(--muted)}
+  .notify.off{background:#eef4f8;border-color:#cfe0ea;color:#3d6f8f;font-weight:700}
+  .link{border:none;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;padding:0}
+
+  .totals{background:var(--deep);color:#fff;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .totals b{font-size:22px;font-weight:900}
+  .totals small{color:var(--foam);font-size:12px}
+
+  .recent{background:var(--card);border-radius:14px;padding:4px 16px;box-shadow:0 4px 16px rgba(120,50,10,.06)}
+  .recent-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;align-items:baseline}
+  .recent-item:last-child{border-bottom:none}
+  .recent-item time{color:var(--muted);font-size:12px;white-space:nowrap}
+  .tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:4px}
+  .tag.minus{background:#fde3e3;color:#c43c3c}
+  .tag.plus{background:var(--yes-soft);color:var(--yes)}
+  .empty{color:var(--muted);font-size:13px;padding:12px 0}
+
+  .add{background:var(--card);border:2px dashed #f2c9a3;border-radius:14px;padding:12px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:26px;font-size:14px}
+  .add input[type=text]{flex:1;min-width:140px;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  .add input[type=number]{width:54px;font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center}
+  .btn{border:none;background:var(--sea);color:#fff;font:inherit;font-weight:700;border-radius:10px;padding:9px 16px;cursor:pointer}
+  .loading{color:var(--muted);text-align:center;padding:30px 0}
+  .ro .seg,.ro .paid,.ro .stepper button,.ro .link,.ro .notify{pointer-events:none}
+  .ro .add,.ro .target-edit input{display:none}
+
+  @media (max-width:560px){
+    h1{font-size:26px}
+    .stat{padding:8px 9px}
+    .stat .v{font-size:21px}
+    .seats{gap:5px}
+    .seat{height:40px;font-size:13px;border-radius:10px}
+    .fee{margin-left:0}
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <svg class="currents" viewBox="0 0 800 300" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M-20 80 C 150 20, 300 140, 480 70 S 760 40, 840 100"/>
+    <path d="M-20 160 C 120 110, 330 220, 520 150 S 740 120, 840 180"/>
+    <path d="M-20 240 C 180 190, 360 290, 560 220 S 780 210, 840 250"/>
+  </svg>
+  <div class="hero-in">
+    <h1><span class="num">1128</span> 開票趴</h1>
+    <div class="stats">
+      <div class="stat" id="stYes"><div class="l">確定出席</div><div class="v">–<small>位</small></div><div class="s"></div></div>
+      <div class="stat short" id="stShort"><div class="l">還缺</div><div class="v">–<small>位</small></div><div class="s"></div></div>
+    </div>
+    <div class="seats-h"><span><b>確定出席名單</b></span><span class="target-edit">目標 <input type="number" id="targetIn" min="1" value="40"> 位</span></div>
+    <div class="seats" id="seats"></div>
+    <div class="seat-legend">
+      <span><i style="background:#fff"></i>大人 $500</span>
+      <span><i style="background:#ffe2c2"></i>小孩 $250</span>
+      <span><i style="border:1.5px dashed rgba(255,236,214,.7)"></i>空位</span>
+    </div>
+  </div>
+  <div class="hero-wave" aria-hidden="true">
+    <svg class="b" viewBox="0 0 1600 70" preserveAspectRatio="none"><path d="M0 35 Q 100 5 200 35 T 400 35 T 600 35 T 800 35 T 1000 35 T 1200 35 T 1400 35 T 1600 35 V70 H0Z" fill="#ffd9b8"/></svg>
+    <svg viewBox="0 0 1600 70" preserveAspectRatio="none"><path d="M0 45 Q 100 20 200 45 T 400 45 T 600 45 T 800 45 T 1000 45 T 1200 45 T 1400 45 T 1600 45 V70 H0Z" fill="#fff6ee"/></svg>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <div class="notice" id="notice"></div>
+  <div id="sections"><div class="loading" id="loading">載入名單中…</div></div>
+
+  <section class="sec">
+    <div class="sec-h"><svg class="drop" viewBox="0 0 14 18"><path d="M7 0 C 7 0 0 8 0 11.5 A7 7 0 0 0 14 11.5 C 14 8 7 0 7 0Z" fill="#f07c1e"/></svg>最近變動</div>
+    <div class="recent" id="recent"><div class="empty">還沒有人回覆</div></div>
+  </section>
+
+  <form class="add" id="addForm">
+    <strong>＋ 新增邀請</strong>
+    <input type="text" id="addName" placeholder="名字（例如：小明家）" maxlength="30" required>
+    大人 <input type="number" id="addA" min="0" value="1">
+    小孩 <input type="number" id="addK" min="0" value="0">
+    <label><input type="checkbox" id="addFam"> 家族</label>
+    <button class="btn" type="submit">加入名單</button>
+  </form>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const PRICE_A = 500, PRICE_K = 250;
+  let db = null, guests = [], meta = {target:40}, readOnly = false;
+  const busy = new Set();
+  const DROP = c => `<svg class="drop" viewBox="0 0 14 18"><path d="M7 0 C 7 0 0 8 0 11.5 A7 7 0 0 0 14 11.5 C 14 8 7 0 7 0Z" fill="${c}"/></svg>`;
+
+  function esc(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function n(v){v = Number(v); return Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0}
+  function money(v){ return '$' + v.toLocaleString('en-US'); }
+  function st(g){ return g.status === 'yes' || g.status === 'no' ? g.status : 'wait'; }
+  function notified(g){ return g.notified !== false; }
+  function fee(a,k){ return a*PRICE_A + k*PRICE_K; }
+  function shortName(g){ return String(g.name||'').replace(/夫婦$/,'') || g.name; }
+  function fmtTime(ms){
+    if(!ms) return '';
+    const d = new Date(ms), diff = (Date.now() - ms)/1000;
+    if(diff < 60) return '剛剛';
+    if(diff < 3600) return Math.floor(diff/60) + ' 分鐘前';
+    if(diff < 86400) return Math.floor(diff/3600) + ' 小時前';
+    return (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  function party(a,k){ return a + '大' + (k ? k + '小' : ''); }
+  function showNotice(msg){ const el = $('notice'); el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
+  function setReadOnly(){ readOnly = true; document.body.classList.add('ro'); showNotice('你目前只能查看名單，無法修改。如需回覆，請直接告訴主辦人。'); }
+  function setStat(id, v, s){ const el = $(id); el.querySelector('.v').innerHTML = v; el.querySelector('.s').textContent = s || ''; }
+
+  function renderHero(){
+    const target = n(meta.target) || 40;
+    let yes = 0, yA = 0, yK = 0, wait = 0, waitFee = 0;
+    const seats = [];
+    guests.forEach(g => {
+      const s = st(g);
+      if(s === 'yes'){
+        const a = n(g.adults), k = n(g.kids);
+        yes += a + k; yA += a; yK += k;
+        const names = Array.isArray(g.seatNames) && g.seatNames.length ? g.seatNames : null;
+        for(let i = 0; i < a; i++) seats.push({label: names ? (names[i] || shortName(g)) : shortName(g), kid:false});
+        for(let i = 0; i < k; i++) seats.push({label: shortName(g), kid:true});
+      } else if(s === 'wait'){
+        wait += n(g.invAdults) + n(g.invKids);
+        waitFee += fee(n(g.invAdults), n(g.invKids));
+      }
+    });
+    const expected = yes + wait, short = target - expected;
+    const confirmedFee = fee(yA, yK);
+
+    setStat('stYes', yes + '<small>位</small>', yA + ' 大 ' + yK + ' 小');
+    const sEl = $('stShort');
+    sEl.classList.toggle('ok', short <= 0);
+    sEl.querySelector('.l').textContent = short > 0 ? '還缺' : (short === 0 ? '剛好湊滿' : '預計超出');
+    setStat('stShort', (short > 0 ? short : (short === 0 ? 0 : '+' + (-short))) + '<small>位</small>',
+      '待回覆都到也只有 ' + expected + ' 位');
+    if(short <= 0) sEl.querySelector('.s').textContent = '全部到齊預計 ' + expected + ' 位';
+
+    const total = Math.max(target, Math.ceil(seats.length / 5) * 5);
+    let html = '';
+    for(let i = 0; i < total; i++){
+      const s = seats[i];
+      if(s) html += `<div class="seat on${s.kid ? ' kid' : ''}${i >= target ? ' extra' : ''}" title="${esc(s.label)}${s.kid ? '（小孩）' : ''}">${esc(s.label)}</div>`;
+      else html += '<div class="seat empty">' + (i + 1) + '</div>';
+    }
+    $('seats').innerHTML = html;
+    if(document.activeElement !== $('targetIn')) $('targetIn').value = target;
+  }
+
+  function renderRecent(){
+    const items = guests.filter(g => g.updatedAt && st(g) !== 'wait')
+      .sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0)).slice(0, 6);
+    const el = $('recent');
+    if(!items.length){ el.innerHTML = '<div class="empty">還沒有人回覆</div>'; return; }
+    el.innerHTML = items.map(g => {
+      let txt;
+      if(st(g) === 'no') txt = `<b>${esc(g.name)}</b> 不克出席 <span class="tag minus">−${n(g.invAdults)+n(g.invKids)}</span>`;
+      else {
+        const diff = (n(g.adults)+n(g.kids)) - (n(g.invAdults)+n(g.invKids));
+        txt = `<b>${esc(g.name)}</b> 會出席 ${party(n(g.adults), n(g.kids))}` +
+          (diff ? ` <span class="tag ${diff>0?'plus':'minus'}">${diff>0?'+':'−'}${Math.abs(diff)}</span>` : '');
+      }
+      if(g.note) txt += ` <span style="color:var(--muted)">· ${esc(g.note)}</span>`;
+      return `<div class="recent-item"><span>${txt}</span><time>${fmtTime(g.updatedAt)}</time></div>`;
+    }).join('');
+  }
+
+  function card(g){
+    const s = st(g);
+    const a = s === 'yes' ? n(g.adults) : n(g.invAdults);
+    const k = s === 'yes' ? n(g.kids) : n(g.invKids);
+    const changed = s === 'yes' && (n(g.adults) !== n(g.invAdults) || n(g.kids) !== n(g.invKids));
+    let meta = '原本 ' + party(n(g.invAdults), n(g.invKids));
+    if(changed) meta += ' → <span class="chg">改為 ' + party(n(g.adults), n(g.kids)) + '</span>';
+    if(s === 'wait') meta += ' · 預估 ' + money(fee(a, k));
+    if(g.updatedAt && s !== 'wait') meta += ' · ' + fmtTime(g.updatedAt);
+    if(g.note && s !== 'wait') meta += ' · ' + esc(g.note);
+    let row2 = '';
+    if(s === 'yes'){
+      row2 = `<div class="row2">
+        大人 <span class="stepper"><button data-act="a-" data-id="${g.id}" aria-label="大人減一">−</button><span>${a}</span><button data-act="a+" data-id="${g.id}" aria-label="大人加一">＋</button></span>
+        小孩 <span class="stepper"><button data-act="k-" data-id="${g.id}" aria-label="小孩減一">−</button><span>${k}</span><button data-act="k+" data-id="${g.id}" aria-label="小孩加一">＋</button></span>
+        <div class="fee"><b>${money(fee(a,k))}</b><small>${a}大×500${k ? ' + ' + k + '小×250' : ''}</small></div>
+      </div>`;
+    } else if(s === 'no'){
+      row2 = `<div class="row2"><button class="link" data-act="del" data-id="${g.id}">從名單移除</button></div>`;
+    } else {
+      row2 = `<div class="row2"><button class="notify ${notified(g) ? '' : 'off'}" data-act="notify" data-id="${g.id}">${notified(g) ? '✓ 已通知，等回覆' : '尚未通知（按一下標記已通知）'}</button></div>`;
+    }
+    const cls = s === 'wait' && !notified(g) ? 'wait notyet' : s;
+    return `<div class="g ${cls}">
+      <div class="row1">
+        <div><div class="g-name">${esc(g.name)}${g.family ? ' <span class="fam">家族</span>' : ''}${s === 'yes' ? ` <button class="paid ${g.paid ? 'on' : ''}" data-act="paid" data-id="${g.id}" aria-pressed="${g.paid ? 'true' : 'false'}"><i>${g.paid ? '✓' : ''}</i>${g.paid ? '已繳費' : '未繳費'}</button>` : ''}</div><div class="g-meta">${meta}</div></div>
+        <div class="seg">
+          <button class="s-yes ${s==='yes'?'on':''}" data-act="yes" data-id="${g.id}">會出席</button>
+          <button class="s-no ${s==='no'?'on':''}" data-act="no" data-id="${g.id}">不克出席</button>
+          <button class="s-wait ${s==='wait'?'on':''}" data-act="wait" data-id="${g.id}">待回覆</button>
+        </div>
+      </div>${row2}</div>`;
+  }
+
+  function renderSections(){
+    const box = $('sections');
+    if(!guests.length){ box.innerHTML = '<div class="loading">名單是空的，可以從下方新增。</div>'; return; }
+    const wait = guests.filter(g => st(g) === 'wait');
+    const unsure = wait.filter(notified), notyet = wait.filter(g => !notified(g));
+    const yes = guests.filter(g => st(g) === 'yes'), no = guests.filter(g => st(g) === 'no');
+    const ppl = arr => arr.reduce((t,g) => t + n(g.invAdults) + n(g.invKids), 0);
+    const yesPpl = yes.reduce((t,g) => t + n(g.adults) + n(g.kids), 0);
+    const yesFee = yes.reduce((t,g) => t + fee(n(g.adults), n(g.kids)), 0);
+    const list = arr => `<div class="list">${arr.map(card).join('')}</div>`;
+
+    let html = `<section class="sec">
+      <div class="sec-h">${DROP('#2f86b8')}尚未確定・尚未通知<span class="count">${wait.length} 組 · 約 ${ppl(wait)} 位</span></div>`;
+    if(!wait.length) html += '<div class="sec-empty">大家都回覆了 🎉</div>';
+    else {
+      html += `<div class="sub-h">尚未確定（已通知，等回覆）<span class="count">${unsure.length} 組 · ${ppl(unsure)} 位</span></div>` +
+        (unsure.length ? list(unsure) : '<div class="sec-empty">沒有</div>');
+      html += `<div class="sub-h">尚未通知<span class="count">${notyet.length} 組 · ${ppl(notyet)} 位</span></div>` +
+        (notyet.length ? list(notyet) : '<div class="sec-empty">都通知過了</div>');
+    }
+    html += `</section>`;
+
+    html += `<section class="sec">
+      <div class="sec-h">${DROP('#ea6a12')}會出席・費用<span class="count">${yes.length} 組 · ${yesPpl} 位 · 已繳費 ${yes.filter(g => g.paid).length} 組</span></div>
+      ${yes.length ? list(yes) : '<div class="sec-empty">還沒有人確認</div>'}
+    </section>`;
+
+    html += `<section class="sec">
+      <div class="sec-h">${DROP('#9aa7b2')}不克出席<span class="count">${no.length} 組</span></div>
+      ${no.length ? list(no) : '<div class="sec-empty">目前沒有人不克出席</div>'}
+    </section>`;
+    box.innerHTML = html;
+  }
+
+  function render(){ renderHero(); renderSections(); renderRecent(); }
+
+  async function write(id, patch){
+    if(!db || readOnly || busy.has(id)) return;
+    busy.add(id);
+    try{ await db.doc('guests/' + id).update(Object.assign({}, patch, {updatedAt: Date.now()})); }
+    catch(e){ if(e && e.code === 'invalid_argument') setReadOnly(); else showNotice('儲存失敗，請稍後再試一次。'); }
+    finally{ busy.delete(id); }
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]');
+    if(!b) return;
+    const g = guests.find(x => x.id === b.dataset.id);
+    if(!g) return;
+    const act = b.dataset.act, s = st(g);
+    if(act === 'yes'){
+      if(s !== 'yes') write(g.id, {status:'yes', adults:n(g.invAdults), kids:n(g.invKids), notified:true});
+    } else if(act === 'no'){
+      if(s !== 'no') write(g.id, {status:'no', notified:true});
+    } else if(act === 'wait'){
+      if(s !== 'wait') write(g.id, {status:'wait', adults:n(g.invAdults), kids:n(g.invKids)});
+    } else if(act === 'paid'){
+      write(g.id, {paid: !g.paid});
+    } else if(act === 'notify'){
+      write(g.id, {notified: !notified(g)});
+    } else if(/^[ak][+-]$/.test(act)){
+      const field = act[0] === 'a' ? 'adults' : 'kids';
+      const cur = n(g[field]);
+      const v = Math.max(0, cur + (act[1] === '+' ? 1 : -1));
+      if(v === cur) return;
+      const other = field === 'adults' ? n(g.kids) : n(g.adults);
+      if(v + other === 0){ write(g.id, {status:'no'}); return; }
+      write(g.id, {[field]: v});
+    } else if(act === 'del'){
+      if(b.dataset.confirm){ db && db.doc('guests/' + g.id).delete().catch(()=>showNotice('刪除失敗')); }
+      else { b.dataset.confirm = '1'; b.textContent = '再按一次確認移除'; b.style.color = '#d2552e'; }
+    }
+  });
+
+  let targetTimer;
+  $('targetIn').addEventListener('input', e => {
+    clearTimeout(targetTimer);
+    targetTimer = setTimeout(async () => {
+      const v = n(e.target.value);
+      if(!db || readOnly || !v || v === n(meta.target)) return;
+      try{ await db.doc('meta/event').set(Object.assign({}, meta, {target: v})); }
+      catch(err){ if(err && err.code === 'invalid_argument') setReadOnly(); }
+    }, 700);
+  });
+
+  $('addForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if(!db || readOnly) return;
+    const name = $('addName').value.trim();
+    const a = n($('addA').value), k = n($('addK').value);
+    if(!name || a + k === 0) return;
+    const maxOrder = guests.reduce((m,g) => Math.max(m, n(g.order)), 0);
+    try{
+      await db.collection('guests').add({name, invAdults:a, invKids:k, adults:a, kids:k, status:'wait', notified:false, note:'', family: $('addFam').checked, order: maxOrder + 1});
+      $('addName').value = ''; $('addA').value = 1; $('addK').value = 0; $('addFam').checked = false;
+    }catch(err){ if(err && err.code === 'invalid_argument') setReadOnly(); else showNotice('新增失敗，請稍後再試。'); }
+  });
+
+  setInterval(() => { if(guests.length) renderRecent(); }, 60000);
+  render();
+
+  (async () => {
+    if(!window.claude || !window.claude.use){ $('loading').textContent = '請在 claude.ai 開啟這個頁面才能讀取名單。'; return; }
+    db = await window.claude.use('db');
+    const user = await window.claude.use('user');
+    if(!db){ $('loading').textContent = '請登入後再開啟，才能看到名單。'; return; }
+    try{ if(user){ const can = await user.can('data.write'); if(can === false) setReadOnly(); } }catch(_){}
+    let got = false;
+    const timer = setTimeout(() => { if(!got){ const l = $('loading'); if(l) l.textContent = '暫時連不上資料，請稍後重新整理。'; } }, 10000);
+    db.collection('guests').onSnapshot(snap => {
+      if(!snap.metadata.fromCache){ got = true; clearTimeout(timer); }
+      guests = snap.docs.map(d => Object.assign({id: d.id}, d.data())).sort((x,y) => ((y.family?1:0) - (x.family?1:0)) || (n(x.order) - n(y.order)));
+      render();
+    }, () => { clearTimeout(timer); const l = $('loading'); if(l) l.textContent = '無法讀取名單。'; });
+    db.doc('meta/event').onSnapshot(s => { if(s.exists){ meta = Object.assign({target:40}, s.data()); renderHero(); } }, ()=>{});
+  })();
+})();
+</script>
+</body>
+</html>
