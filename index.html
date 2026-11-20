@@ -181,6 +181,55 @@
 </main>
 
 <script>
+// ===== Firebase 連線（取代 claude.ai 的資料庫）=====
+window.__fbReady = new Promise(r => { window.__fbResolve = r; });
+window.claude = {
+  use: async (name) => {
+    const fb = await Promise.race([window.__fbReady, new Promise(r => setTimeout(() => r(null), 10000))]);
+    if (!fb) return null;
+    if (name === 'db') return fb.db;
+    if (name === 'user') return { can: async () => true, isOwner: () => false, canEdit: () => true };
+    return null;
+  }
+};
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, updateDoc, setDoc, deleteDoc, addDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app = initializeApp({
+  apiKey: "AIzaSyBxb8Fs3BhCknSWch7PqkDRbuZ7Ylpn1Mk",
+  authDomain: "party-81307.firebaseapp.com",
+  projectId: "party-81307",
+  storageBucket: "party-81307.firebasestorage.app",
+  messagingSenderId: "62554239231",
+  appId: "1:62554239231:web:b505a6227185c1f31e1cca"
+});
+const fs = getFirestore(app);
+const wrapDoc = s => ({ id: s.id, exists: s.exists(), data: () => s.data(), metadata: s.metadata });
+const err = e => ({ code: e && e.code === 'permission-denied' ? 'invalid_argument' : 'unavailable', message: String(e && e.message) });
+const docRef = path => {
+  const r = doc(fs, path);
+  return {
+    id: r.id, path,
+    onSnapshot: (next, error) => onSnapshot(r, { includeMetadataChanges: false }, s => next(wrapDoc(s)), e => error && error(err(e))),
+    update: d => updateDoc(r, d).catch(e => { throw err(e); }),
+    set: d => setDoc(r, d).catch(e => { throw err(e); }),
+    delete: () => deleteDoc(r).catch(e => { throw err(e); }),
+  };
+};
+const colRef = path => {
+  const c = collection(fs, path);
+  return {
+    path,
+    onSnapshot: (next, error) => onSnapshot(c, s => next({ docs: s.docs.map(wrapDoc), size: s.size, empty: s.empty, metadata: s.metadata }), e => error && error(err(e))),
+    add: d => addDoc(c, d).catch(e => { throw err(e); }),
+    doc: id => docRef(path + '/' + id),
+  };
+};
+window.__fbResolve({ db: { doc: docRef, collection: colRef } });
+</script>
+<script>
 (function(){
   const $ = id => document.getElementById(id);
   const PRICE_A = 500, PRICE_K = 250;
@@ -205,7 +254,7 @@
   }
   function party(a,k){ return a + '大' + (k ? k + '小' : ''); }
   function showNotice(msg){ const el = $('notice'); el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
-  function setReadOnly(){ readOnly = true; document.body.classList.add('ro'); showNotice('你目前只能查看名單，無法修改。如需回覆，請直接告訴主辦人。'); }
+  function setReadOnly(){ showNotice('儲存失敗，請重新整理後再試一次。'); }
   function setStat(id, v, s){ const el = $(id); el.querySelector('.v').innerHTML = v; el.querySelector('.s').textContent = s || ''; }
 
   function renderHero(){
@@ -401,10 +450,10 @@
   render();
 
   (async () => {
-    if(!window.claude || !window.claude.use){ $('loading').textContent = '請在 claude.ai 開啟這個頁面才能讀取名單。'; return; }
+    if(!window.claude || !window.claude.use){ $('loading').textContent = '無法載入，請重新整理。'; return; }
     db = await window.claude.use('db');
     const user = await window.claude.use('user');
-    if(!db){ $('loading').textContent = '請登入後再開啟，才能看到名單。'; return; }
+    if(!db){ $('loading').textContent = '連不上資料庫，請檢查網路後重新整理。'; return; }
     try{ if(user){ const can = await user.can('data.write'); if(can === false) setReadOnly(); } }catch(_){}
     let got = false;
     const timer = setTimeout(() => { if(!got){ const l = $('loading'); if(l) l.textContent = '暫時連不上資料，請稍後重新整理。'; } }, 10000);
